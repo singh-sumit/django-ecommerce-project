@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+Add to cart
+{% endblock title %}
+
+{% block style %}
+.container-fluid{
+margin-top: 90px;
+}
+{% endblock style%}
+
+{% block content %}
+<div class="container">
+    <h2>Product added to cart successfully.</h2>
+    <br>
+    <a href="{% url 'ecomapp:home' %}" class="btn btn-outline-primary btn-sm mr-5">Continue Shopping...</a>
+    <a href="{% url 'ecomapp:mycart' %}" class="btn btn-outline-success btn-sm ml-5">View Cart</a>
+
+
+</div>
+{% endblock content %}

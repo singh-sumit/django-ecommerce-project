@@ -1,0 +1,48 @@
+{% extends "admin/adminbase.html" %}
+
+{% block title %}All Orders | Admin Dashboard{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 mt-4">
+            <h3>All Category :</h3>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>SN</th>
+                    <th>Title</th>
+                    <th>Category ID</th>
+                    <th>Slug</th>
+                    <th>Products Count</th>
+                    <th colspan="2">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for category in category_list %}
+                <tr>
+                    <td>{{forloop.counter}}</td>
+                    <td>{{ category.title }}</td>
+                     <td><a href="{% url 'ecomapp:admin-manage-category' category.slug %}">#CATEGORY_{{ category.id }}</a></td>
+                    <td>{{ category.slug }}</td>
+                    <td>{{ category.product_set.count }}</td>
+                    <td>
+                        <a href="{% url 'ecomapp:admin-manage-category' category.slug %}?action=edit" >
+                            <i class="fa fa-edit green"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="#" >
+                            <i class="fa fa-trash red"></i>
+                        </a>
+                    </td>
+
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+

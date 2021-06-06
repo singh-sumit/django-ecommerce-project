@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}
+  About
+{% endblock title %}
+
+{% block style %}
+  .container-fluid{
+    margin-top:70px;
+  }
+{% endblock style%}
+
+{% block content %}
+<div class="container id="about-cont">
+  <div class="row mt-4">
+    <h1 class="text-primary">About us page</h1>
+  </div>
+</div>
+
+
+<!--  team section-->
+  <section id="team" class="team">
+
+      <div class="container" data-aos="fade-up">
+        <div class="row">
+          <div class="col-md-8">
+            Our Mission
+As part of the Ecommerce , our mission is to make it easy to do business anywhere.
+
+We do this by giving suppliers the tools necessary to reach a global audience for their products, and by helping buyers find products and suppliers quickly and efficiently.
+          </div>
+          <div class="col-md-4">
+            <img src="{% static 'connect.jpg' %}" class="img-fluid">
+          </div>
+
+        </div>
+        <div class="mt-4 text-center lead "  >
+          <h1 class="text-primary">Team</h1>
+          <p>Our hard working team</p>
+          <hr>
+        </div>
+
+        <div class="row gy-4">
+
+          <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="100">
+            <div class="member">
+              <div class="member-img">
+                <img src="{% static 'teams/me.jpg'%}" class="img-fluid" alt="" width="200">
+              </div>
+              <div class="member-info">
+                <h4 class="mt-2">Timus Singh</h4>
+                <span class="text-muted">Chief Executive Officer</span>
+                <p>Velit aut quia fugit et et. Dolorum ea voluptate vel tempore tenetur ipsa quae aut. Ipsum exercitationem iure minima enim corporis et voluptate.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
+            <div class="member">
+              <div class="member-img">
+                <img src="{% static 'teams/sanjay.jpg' %}" class="img-fluid" alt="" width="200">
+              </div>
+              <div class="member-info">
+                <h4 class="mt-2">Sanjay Chaudhary</h4>
+                <span class="text-muted">Product Manager</span>
+                <p>Quo esse repellendus quia id. Est eum et accusantium pariatur fugit nihil minima suscipit corporis. Voluptate sed quas reiciendis animi neque sapiente.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
+            <div class="member">
+              <div class="member-img">
+                <img src="{% static 'teams/ram.png' %}" class="img-fluid" alt="" width="200">
+              </div>
+              <div class="member-info">
+                <h4 class="mt-2">Ram Krishna Mandal</h4>
+                <span class="text-muted">CTO</span>
+                <p>Quo esse repellendus quia id. Est eum et accusantium pariatur fugit nihil minima suscipit corporis. Voluptate sed quas reiciendis animi neque sapiente.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-3 col-md-6 d-flex align-items-stretch" data-aos="fade-up" data-aos-delay="200">
+            <div class="member">
+              <div class="member-img">
+                <img src="{% static 'teams/sahina.jpg' %}" class="img-fluid" alt="" width="200">
+              </div>
+              <div class="member-info">
+                <h4 class="mt-2">Shahina Parween</h4>
+                <span class="text-muted">CFO</span>
+                <p>Quo esse repellendus quia id. Est eum et accusantium pariatur fugit nihil minima suscipit corporis. Voluptate sed quas reiciendis animi neque sapiente.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section><!-- End Team Section -->
+{% endblock content %}

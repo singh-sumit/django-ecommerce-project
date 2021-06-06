@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Product Detail | {{ product.title }}
+{% endblock title %}
+
+{% block style %}
+  .container-fluid{
+    margin-top: 90px;
+  }
+{% endblock style%}
+
+{% block content %}
+<div class="container">
+    <div class="card mb-3 " style="max-width: 950px;">
+        <div class="row no-gutters">
+            <div class="col-md-4 mt-4 ">
+                <img src="{{ product.image.url }}" class="img-fluid" alt="{{product.title}}" >
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.title }}</h5>
+                    <small>Viewed : {{ product.view_count }} times</small>
+                    <hr>
+                    <h6>Category : {{ product.category }}</h6>
+                    <h5>Price :<del class="text-danger">Rs .{{ product.marked_price }}</del>
+                        Rs. <span class="text-success">{{ product.selling_price }}</span>
+                    </h5>
+                    <br>
+                    <a href="{% url 'ecomapp:addtocart' product.id %}" class="btn btn-info">Add To Cart</a>
+                    <div class="mt-3">
+                        <p><span class="text-info">Warranty :</span> {{ product.warranty }}</p>
+                        <p><span class="text-secondary">Return Policy :</span> {{ product.return_policy }}</p>
+                    </div>
+                    <p class="card-text">
+                        <span class="lead">Details:</span><hr>
+                        {{ product.description }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

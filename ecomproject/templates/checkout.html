@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Checkout{% endblock title %}
+
+{% block content %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-6">
+      <h3>Items in a cart.</h3>
+        <a href="{% url 'ecomapp:mycart' %}" class="btn btn-outline-warning m-2">
+            <i class="fa fa-wrench fa-spin"></i> Update Cart
+        </a>
+      <table class="table">
+        <thead>
+          <tr>
+              <td>SN</td>
+              <td>Product</td>
+              <td>Rate</td>
+              <td>Quantity</td>
+              <td>Subtotal</td>
+          </tr>
+        </thead>
+        <tbody>
+            {% for p_incart in cart.cartproduct_set.all %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ p_incart.product.title }}</td>
+                    <td>{{ p_incart.rate }}</td>
+                    <td>{{ p_incart.quantity }}</td>
+                    <td>{{ p_incart.subtotal }}</td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <th colspan="4" class="text-right">Total :</th>
+                <th>Rs. {{ cart.total }}</th>
+            </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6">
+        <h3>Checkout Form</h3>
+        <form action="" method="POST">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-outline-primary">Place Order</button>
+        </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

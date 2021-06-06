@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Search Products{% endblock title %}
+
+{% block style %}
+  .container-fluid{
+    margin-top: 90px;
+  }
+{% endblock style%}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            {% if results %}
+                <h3>Search Results for <span class="text-info">"{{ request.GET.keyword }}"</span> ......</h3>
+                <hr>
+                {% for result in results %}
+                <div class="row">
+                    <div class="col-md-2">
+                        <a href="{% url 'ecomapp:productdetail' result.slug %}">
+                            <img src="{{ result.image.url }}" class="img-fluid" width="200" alt="">
+                        </a>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="d-flex justify-space-around">
+                            <h4 class="mr-5">{{ result.title }}</h4>
+                            <a href="{% url 'ecomapp:addtocart' result.id %}" class="btn btn-primary btn-sm ml-5">Add To
+                                Cart</a>
+                        </div>
+                        <br>
+                        <h6>Price :
+                            <del class="text-danger">Rs .{{ result.marked_price }}</del>
+                            Rs. <span class="text-success">{{ result.selling_price }}</span>
+                        </h6>
+                        <br>
+                        <p>{{ result.description|truncatewords:50 }}</p>
+                    </div>
+                </div>
+                <hr>
+                {% endfor %}
+            {% else %}
+                <h3>No Results for <span class="text-info">"{{ request.GET.keyword }}"</span> ......</h3>
+                <hr>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

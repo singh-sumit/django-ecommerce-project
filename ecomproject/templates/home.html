@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+Home
+{% endblock title %}
+
+{% block style %}
+.container-fluid{
+margin-top:70px;
+}
+.welcome-slide{
+
+}
+{% endblock style%}
+
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="welcome-slide text-center">
+
+            <!--            casurorel -->
+            <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                <ol class="carousel-indicators">
+                    <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+                    <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
+                    <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
+                </ol>
+                <div class="carousel-inner">
+                    <div class="carousel-item active">
+                        <img class="d-block w-100" src="{% static 'logos/logo.png' %}" alt="First slide">
+                    </div>
+                    <div class="carousel-item">
+                        <img class="d-block w-100" src="{% static 'slides/image4.jpeg' %}" alt="Third slide">
+                    </div>
+                    <div class="carousel-item">
+                        <img class="d-block w-100" src="{% static 'slides/imgae3.jpeg' %}" alt="Second slide">
+                    </div>
+
+                </div>
+                <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+                <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </div>
+            <h1>Welcome to ecommerce website.</h1>
+            <hr>
+
+        </div>
+
+    </div>
+</div>
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-3 mt-5 ">
+            <!--                category check section-->
+            <ul class="list-group">
+                <li class="list-group-item disabled">Category</li>
+                {% for cat in category_list %}
+                <a href="{% url 'ecomapp:categorized-products' cat.id %}"
+                   class="list-group-item list-group-item-action">{{ cat.title }}</a>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-9 ">
+            <div class="row">
+                {% for product in product_list %}
+                <div class="col-md-6 mt-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="text-center">{{ product.title }}</h4>
+                        </div>
+                        <div class="card-body">
+                            <a href="{% url 'ecomapp:productdetail' product.slug %}">
+                                <img src="{{ product.image.url }}" class="img-fluid" width="200">
+                            </a>
+                            <a href="{% url 'ecomapp:addtocart' product.id %}"
+                               class="btn btn-sm btn-outline-primary mt-3 ml-5">Add to Cart</a>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between">
+                            <div class="text-danger">
+                                <p>Npr:
+                                    <del>{{ product.marked_price }}</del>
+                                </p>
+                            </div>
+                            <div class="text-success">
+                                <p>Npr: {{ product.selling_price }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+{% endblock content %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Allproducts
+{% endblock title%}
+
+{% block content %}
+<div class="container">
+  <h3>All Products by Category</h3>
+  <hr>
+  {% for cat in allcategories %}
+    <h4>{{cat.title}}</h4>
+      <div class="row">
+
+      </div>
+  {% endfor %}
+
+</div>
+{% endblock content %}

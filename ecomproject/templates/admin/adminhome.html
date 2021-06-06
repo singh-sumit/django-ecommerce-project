@@ -1,0 +1,81 @@
+{% extends "admin/adminbase.html" %}
+
+{% block title %}Admin Dashboard{% endblock title %}
+
+
+{% block content %}
+<!-- top tiles -->
+<div class="row" style="display: inline-block;">
+    <div class="tile_count ">
+        <div class="col-md-3 col-sm-4  tile_stats_count text-center ">
+            <span class="count_top"><i class="fa fa-user"></i> Total Users</span>
+            <div class="count">{{ user_count }}</div>
+
+        </div>
+        <div class="col-md-3 col-sm-4  tile_stats_count text-center">
+            <span class="count_top"><i class="fa fa-clock-o"></i> Total Products </span>
+            <div class="count">{{ total_products }}</div>
+
+        </div>
+        <div class="col-md-3 col-sm-4  tile_stats_count text-center">
+            <span class="count_top"><i class="fa fa-user"></i> Total Orders </span>
+            <div class="count green">{{ total_orders }}</div>
+
+        </div>
+        <div class="col-md-3 col-sm-4  tile_stats_count text-center">
+            <span class="count_top"><i class="fa fa-user"></i> Total Category</span>
+            <div class="count">{{ total_categories }}</div>
+
+        </div>
+        <div class="col-md-3 col-sm-4  tile_stats_count text-center">
+            <span class="count_top"><i class="fa fa-user"></i> Total Pending Order</span>
+            <div class="count text-warning">{{ total_pending }}</div>
+
+        </div>
+
+    </div>
+</div>
+<!-- /top tiles -->
+
+<div class="row">
+    <div class="col-md-12 col-sm-12 ">
+        <div class="dashboard_graph">
+            <div class="row x_title">
+                <div class="col-md-12 mt-4">
+                    <h3>Pending Orders :</h3>
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>SN</th>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Ordered On</th>
+                            <th>Amount</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for order in pendingorders %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td><a href="{% url 'ecomapp:admin-order-detail' order.id %}">#ORDER_{{ order.id }}</a></td>
+                            <td>{{ order.ordered_by }}</td>
+                            <td>{{ order.created_at|timesince }}</td>
+                            <td>{{ order.total }}</td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="clearfix"></div>
+        </div>
+    </div>
+
+</div>
+<br>
+
+
+
+
+{% endblock content %}
