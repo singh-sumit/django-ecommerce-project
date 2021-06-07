@@ -6,12 +6,17 @@ Home
 {% endblock title %}
 
 {% block style %}
-.container-fluid{
-margin-top:70px;
-}
-.welcome-slide{
+    .container-fluid{
+    margin-top:70px;
+    }
+    .welcome-slide{
 
-}
+    }
+    .avail{
+        position: absolute;
+        bottom: 25%;
+        right: 5%;
+    }
 {% endblock style%}
 
 
@@ -81,8 +86,17 @@ margin-top:70px;
                             <a href="{% url 'ecomapp:productdetail' product.slug %}">
                                 <img src="{{ product.image.url }}" class="img-fluid" width="200">
                             </a>
+                            {% if product.stocks > 0 %}
                             <a href="{% url 'ecomapp:addtocart' product.id %}"
                                class="btn btn-sm btn-outline-primary mt-3 ml-5">Add to Cart</a>
+                            <a href="#" class="btn btn-sm btn-success text-right avail" disabled>
+                                <i class="fa fa-check"></i> Available
+                            </a>
+                            {% else %}
+                            <a href="#" class="btn btn-sm btn-secondary text-right avail" disabled>
+                                <i class="fa fa-ban"></i> Not Available
+                            </a>
+                            {% endif %}
                         </div>
                         <div class="card-footer d-flex justify-content-between">
                             <div class="text-danger">

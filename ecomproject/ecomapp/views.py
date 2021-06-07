@@ -10,6 +10,7 @@ from .forms import (CheckoutForm, CustomerRegistrationForm, CustomerLoginForm,
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.contrib import messages
 
 
 # mixin
@@ -80,22 +81,40 @@ class AddToCartView(EcomMixin, TemplateView):
 
         # check if cart exists
         cart_id = self.request.session.get("cart_id", None)
-        if cart_id:
-            cart_obj = Cart.objects.get(id=cart_id)
+        # if product stock is greater than 0
+        if product_obj.stocks != 0:
+            # if cart_id exist in session
+            if cart_id:
+                cart_obj = Cart.objects.get(id=cart_id)
 
-            # check if product is in cart
-            this_product_in_cart = cart_obj.cartproduct_set.filter(product=product_obj)
-            # if product exist already in cartproduct objects
-            if this_product_in_cart.exists():
-                cartproduct = this_product_in_cart.last()
-                cartproduct.quantity += 1
-                cartproduct.subtotal += product_obj.selling_price
-                cartproduct.save()
+                # check if product is in cart
+                this_product_in_cart = cart_obj.cartproduct_set.filter(product=product_obj)
+                # if product exist already in cartproduct objects
+                if this_product_in_cart.exists():
+                    cartproduct = this_product_in_cart.last()
+                    cartproduct.quantity += 1
+                    cartproduct.subtotal += product_obj.selling_price
+                    cartproduct.save()
 
-                cart_obj.total += product_obj.selling_price
-                cart_obj.save()
+                    cart_obj.total += product_obj.selling_price
+                    cart_obj.save()
+                else:
+                    # new product added to cartproduct
+                    cartproduct = CartProduct.objects.create(cart=cart_obj,
+                                                             product=product_obj,
+                                                             rate=product_obj.selling_price,
+                                                             quantity=1,
+                                                             subtotal=product_obj.selling_price)
+                    cartproduct.save()
+                    cart_obj.total += product_obj.selling_price
+                    cart_obj.save()
+            # if cart doesnot exist
             else:
-                # new product added to cartproduct
+                cart_obj = Cart.objects.create(total=0)
+                # store obje in session
+                self.request.session['cart_id'] = cart_obj.id
+
+                # create a new product to add cartproduct
                 cartproduct = CartProduct.objects.create(cart=cart_obj,
                                                          product=product_obj,
                                                          rate=product_obj.selling_price,
@@ -104,22 +123,14 @@ class AddToCartView(EcomMixin, TemplateView):
                 cartproduct.save()
                 cart_obj.total += product_obj.selling_price
                 cart_obj.save()
-        # if cart doesnot exist
-        else:
-            cart_obj = Cart.objects.create(total=0)
-            # store obje in session
-            self.request.session['cart_id'] = cart_obj.id
 
-            # create a new product to add cartproduct
-            cartproduct = CartProduct.objects.create(cart=cart_obj,
-                                                     product=product_obj,
-                                                     rate=product_obj.selling_price,
-                                                     quantity=1,
-                                                     subtotal=product_obj.selling_price)
-            cartproduct.save()
-            cart_obj.total += product_obj.selling_price
-            cart_obj.save()
-        # check if product already exists in cart
+            # decrement product stock by 1
+            product_obj.stocks -= 1
+            product_obj.save()
+        else:
+            # return error telling Product OUT OF STOCK
+            return context
+
         return context
 
 
@@ -228,7 +239,8 @@ class MyCartView(EcomMixin, TemplateView):
 class ManageCartView(EcomMixin, View):
     def get(self, request, *args, **kwargs):
         cart_id = self.request.session.get('cart_id')
-        cp_id = self.kwargs["cp_id"]
+        cp_id = self.kwargs["cp_id"]  # this is product id
+        product = Product.objects.get(id=cp_id)
         action = request.GET['action']
         # get cart with provied cart_id
         cart = Cart.objects.get(id=cart_id)
@@ -237,13 +249,26 @@ class ManageCartView(EcomMixin, View):
         cart_obj = cp_obj.cart
 
         if action == "inc":
-            cp_obj.quantity += 1
-            cp_obj.subtotal += cp_obj.rate
-            cp_obj.save()
+            # if in stock increment else raise error
+            if product.stocks != 0:
+                print("????????????????", product.title, "-----", product.stocks)
+                cp_obj.quantity += 1
+                cp_obj.subtotal += cp_obj.rate
+                cp_obj.save()
 
-            cart_obj.total += cp_obj.rate
-            cart_obj.save()
+                # decrement product stocks remaining
+                product.stocks -= 1
+                product.save()
+
+                print("After?????????????", product.title, "-----", product.stocks)
+                # save cart
+                cart_obj.total += cp_obj.rate
+                cart_obj.save()
+            else:
+                messages.add_message(request, messages.ERROR, 'Not enough stock for requested product.')
+                return redirect(reverse_lazy("ecomapp:mycart"))
         elif action == "dec":
+
             cp_obj.quantity -= 1
             cp_obj.subtotal -= cp_obj.rate
             cp_obj.save()
@@ -251,11 +276,21 @@ class ManageCartView(EcomMixin, View):
             cart_obj.total -= cp_obj.rate
             cart_obj.save()
 
+            # increase product stock till 0
+            product.stocks += 1
+            product.save()
+
             if cp_obj.quantity == 0:
                 cp_obj.delete()
+
         elif action == "rmv":
             cart_obj.total -= cp_obj.subtotal
             cart_obj.save()
+
+            # set product stock as it
+            product.stocks += cp_obj.quantity
+            product.save()
+
             cp_obj.delete()
         else:
             pass
@@ -267,10 +302,16 @@ class EmptyCartView(View):
         cart_id = request.session.get("cart_id", None)
         if cart_id:
             cart = Cart.objects.get(id=cart_id)
+
+            # get all products in cart and set its product stock to previous value
+            cart_products = cart.cartproduct_set.all()
+            for cp in cart_products:
+                cp.product.stocks += cp.quantity
+                cp.product.save()
+
             cart.cartproduct_set.all().delete()
             cart.total = 0
             cart.save()
-
         else:
             pass
         return redirect("ecomapp:mycart")
@@ -484,6 +525,7 @@ class AdminHomeView(AdminRequiredMixin, TemplateView):
         context['total_orders'] = len(Order.objects.all())
         context["total_pending"] = len(Order.objects.filter(order_status="Order Recieved"))
         context["pendingorders"] = Order.objects.filter(order_status="Order Recieved").order_by("-id")
+        context["total_out_of_stocks"]  = len(Product.objects.filter(stocks=0))
 
         return context
 

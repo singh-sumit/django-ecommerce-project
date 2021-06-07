@@ -27,7 +27,18 @@
                         Rs. <span class="text-success">{{ product.selling_price }}</span>
                     </h5>
                     <br>
-                    <a href="{% url 'ecomapp:addtocart' product.id %}" class="btn btn-info">Add To Cart</a>
+<!--                    <a href="{% url 'ecomapp:addtocart' product.id %}" class="btn btn-info">Add To Cart</a>-->
+                    {% if product.stocks > 0 %}
+                    <a href="{% url 'ecomapp:addtocart' product.id %}"
+                       class="btn btn-sm btn-outline-primary">Add to Cart</a>
+                    <a href="#" class="btn btn-sm btn-success text-right" disabled>
+                        <i class="fa fa-check"></i> Available
+                    </a>
+                    {% else %}
+                    <a href="#" class="btn btn-sm btn-secondary text-right avail">
+                        <i class="fa fa-ban"></i> Not Available
+                    </a>
+                    {% endif %}
                     <div class="mt-3">
                         <p><span class="text-info">Warranty :</span> {{ product.warranty }}</p>
                         <p><span class="text-secondary">Return Policy :</span> {{ product.return_policy }}</p>
