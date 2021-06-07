@@ -33,7 +33,7 @@ class HomeView(EcomMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['category_list'] = Category.objects.all()
-        context['product_list'] = Product.objects.all()
+        context['product_list'] = Product.objects.all().order_by("-id")
         return context
 
 
@@ -42,7 +42,7 @@ class AllProductsView(EcomMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["allcategories"] = Category.objects.all()
+        context["allcategories"] = Category.objects.all().order_by("-id")
         return context
 
 
@@ -477,7 +477,7 @@ class AdminHomeView(AdminRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        users=User.objects.all()
+        users = User.objects.all()
         context['user_count'] = len(users)
         context['total_products'] = len(Product.objects.all())
         context['total_categories'] = len(Category.objects.all())
@@ -487,6 +487,7 @@ class AdminHomeView(AdminRequiredMixin, TemplateView):
 
         return context
 
+
 class AdminPendingOrderView(AdminRequiredMixin, TemplateView):
     template_name = "admin/pendingorder.html"
 
@@ -495,6 +496,8 @@ class AdminPendingOrderView(AdminRequiredMixin, TemplateView):
         context["pendingorders"] = Order.objects.filter(order_status="Order Recieved").order_by("-id")
 
         return context
+
+
 class AdminOrderDetailView(AdminRequiredMixin, DetailView):
     template_name = "admin/orderdetail.html"
     model = Order
@@ -542,19 +545,16 @@ class AdminProfileView(AdminRequiredMixin, UpdateView):
     form_class = AdminProfileUpdateForm
     success_url = reverse_lazy("ecomapp:adminhome")
 
+
 class AdminListCategoryView(AdminRequiredMixin, ListView):
     template_name = "admin/listallcategory.html"
     queryset = Category.objects.all()
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        cat_list=context['category_list']
+        cat_list = context['category_list']
         return context
 
-class AdminDeleteCategoryView(AdminRequiredMixin, DeleteView):
-    model = Category
-    template_name = "admin/confirmdeletecategory.html"
-    success_url = reverse_lazy("ecomapp:adminhome")
 
 class AdminManageCategoryView(AdminRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -566,29 +566,11 @@ class AdminManageCategoryView(AdminRequiredMixin, View):
 
         if action == "edit":
             return redirect("ecomapp:admin-edit-category", slug=url_slug)
-            # cp_obj.quantity += 1
-            # cp_obj.subtotal += cp_obj.rate
-            # cp_obj.save()
-            #
-            # cart_obj.total += cp_obj.rate
-            # cart_obj.save()
-        elif action == "dec":
-            cp_obj.quantity -= 1
-            cp_obj.subtotal -= cp_obj.rate
-            cp_obj.save()
-
-            cart_obj.total -= cp_obj.rate
-            cart_obj.save()
-
-            if cp_obj.quantity == 0:
-                cp_obj.delete()
         elif action == "rmv":
-            cart_obj.total -= cp_obj.subtotal
-            cart_obj.save()
-            cp_obj.delete()
+            cat.delete()
         else:
             pass
-        return redirect("ecomapp:mycart")
+        return redirect("ecomapp:admin-list-category")
 
 
 class AdminEditCategoryView(AdminRequiredMixin, UpdateView):
@@ -596,4 +578,3 @@ class AdminEditCategoryView(AdminRequiredMixin, UpdateView):
     model = Category
     form_class = AdminCategoryUpdateForm
     success_url = reverse_lazy("ecomapp:admin-list-category")
-

@@ -7,7 +7,7 @@ from .views import (HomeView, AboutView, ContactView, AllProductsView,
                     AdminHomeView, AdminOrderDetailView,AdminOrderListView,
                     AdminChangeOrderStatusView,SearchView, AdminCreateCategoryView,
                     AdminCreateProductView,AdminProfileView, AdminPendingOrderView,
-                    AdminDeleteCategoryView,AdminListCategoryView,AdminManageCategoryView,AdminEditCategoryView,
+                    AdminListCategoryView,AdminManageCategoryView,AdminEditCategoryView,
                     )
 
 app_name = "ecomapp"
@@ -51,7 +51,7 @@ urlpatterns = [
 
     path('admin-list-category/', AdminListCategoryView.as_view(), name="admin-list-category"),
     path('admin-edit-category/<slug:slug>/', AdminEditCategoryView.as_view(), name="admin-edit-category"),
-    # path('admin-delete-category-<slug:slug>/', AdminDeleteCategoryView.as_view(), name="admin-delete-category"),
+
     path('admin-manage-category-<slug:slug>/', AdminManageCategoryView.as_view(), name="admin-manage-category"),
 
 
