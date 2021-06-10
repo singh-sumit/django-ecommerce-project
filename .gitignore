@@ -1,2 +1,7 @@
-/venv/
-/.idea/
+venv/
+.idea/
+ecomproject/ecomproject/settings/env.py
+__pycache__/
+
+*.pyc
+__pycache__/

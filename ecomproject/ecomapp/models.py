@@ -37,6 +37,7 @@ class Product(models.Model):
     image = models.ImageField(upload_to="products")
     marked_price = models.PositiveIntegerField()
     selling_price = models.PositiveIntegerField()
+    stocks = models.PositiveIntegerField(default=0)
     description = models.TextField()
     warranty = models.CharField(max_length=300, null=True, blank=True)
     return_policy = models.CharField(max_length=300, null=True, blank=True)

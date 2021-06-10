@@ -34,6 +34,10 @@
                         <a href="{% url 'ecomapp:customer-register' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">Sign
                             Up?</a>
                     </p>
+                    <p class="text-muted small">
+                        Forget Password?
+                        <a href="{% url 'ecomapp:forgot-password' %}">Reset Now</a>
+                    </p>
                 </div>
             </div>
 

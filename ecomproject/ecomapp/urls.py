@@ -7,8 +7,8 @@ from .views import (HomeView, AboutView, ContactView, AllProductsView,
                     AdminHomeView, AdminOrderDetailView,AdminOrderListView,
                     AdminChangeOrderStatusView,SearchView, AdminCreateCategoryView,
                     AdminCreateProductView,AdminProfileView, AdminPendingOrderView,
-                    AdminDeleteCategoryView,AdminListCategoryView,AdminManageCategoryView,AdminEditCategoryView,
-                    )
+                    AdminListCategoryView,AdminManageCategoryView,AdminEditCategoryView,PasswordForgotView,
+                    PasswordResetView,)
 
 app_name = "ecomapp"
 
@@ -32,6 +32,10 @@ urlpatterns = [
     path('logout/', CustomerLogoutView.as_view(), name="customer-logout"),
     path('login/', CustomerLoginView.as_view(), name="customer-login"),
 
+    # user id reset
+    path('forgot-password/', PasswordForgotView.as_view(), name="forgot-password"),
+    path('password-reset/<email>/<token>/', PasswordResetView.as_view(), name="password-reset"),
+
     path('profile/', CustomerProfileView.as_view(), name="customer-profile"),
     path('profile/order-<int:pk>/', CustomerOrderDetailView.as_view(), name="customer-order-detail"),
 
@@ -51,7 +55,7 @@ urlpatterns = [
 
     path('admin-list-category/', AdminListCategoryView.as_view(), name="admin-list-category"),
     path('admin-edit-category/<slug:slug>/', AdminEditCategoryView.as_view(), name="admin-edit-category"),
-    # path('admin-delete-category-<slug:slug>/', AdminDeleteCategoryView.as_view(), name="admin-delete-category"),
+
     path('admin-manage-category-<slug:slug>/', AdminManageCategoryView.as_view(), name="admin-manage-category"),
 
 

@@ -6,10 +6,15 @@ from django.views.generic import (TemplateView, View, CreateView, FormView, Deta
                                   UpdateView, DeleteView)
 from .models import Product, Category, Cart, CartProduct, Order, Admin, Customer, ORDER_STATUS
 from .forms import (CheckoutForm, CustomerRegistrationForm, CustomerLoginForm,
-                    AdminProfileUpdateForm, AdminCreateCategoryForm, AdminCreateProductForm, AdminCategoryUpdateForm)
+                    AdminProfileUpdateForm, AdminCreateCategoryForm, AdminCreateProductForm, AdminCategoryUpdateForm,
+                    PasswordForgotForm,PasswordResetForm, )
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.contrib import messages
+from .utils import password_reset_token
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 # mixin
@@ -33,7 +38,7 @@ class HomeView(EcomMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['category_list'] = Category.objects.all()
-        context['product_list'] = Product.objects.all()
+        context['product_list'] = Product.objects.all().order_by("-id")
         return context
 
 
@@ -42,7 +47,7 @@ class AllProductsView(EcomMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["allcategories"] = Category.objects.all()
+        context["allcategories"] = Category.objects.all().order_by("-id")
         return context
 
 
@@ -80,22 +85,40 @@ class AddToCartView(EcomMixin, TemplateView):
 
         # check if cart exists
         cart_id = self.request.session.get("cart_id", None)
-        if cart_id:
-            cart_obj = Cart.objects.get(id=cart_id)
+        # if product stock is greater than 0
+        if product_obj.stocks != 0:
+            # if cart_id exist in session
+            if cart_id:
+                cart_obj = Cart.objects.get(id=cart_id)
 
-            # check if product is in cart
-            this_product_in_cart = cart_obj.cartproduct_set.filter(product=product_obj)
-            # if product exist already in cartproduct objects
-            if this_product_in_cart.exists():
-                cartproduct = this_product_in_cart.last()
-                cartproduct.quantity += 1
-                cartproduct.subtotal += product_obj.selling_price
-                cartproduct.save()
+                # check if product is in cart
+                this_product_in_cart = cart_obj.cartproduct_set.filter(product=product_obj)
+                # if product exist already in cartproduct objects
+                if this_product_in_cart.exists():
+                    cartproduct = this_product_in_cart.last()
+                    cartproduct.quantity += 1
+                    cartproduct.subtotal += product_obj.selling_price
+                    cartproduct.save()
 
-                cart_obj.total += product_obj.selling_price
-                cart_obj.save()
+                    cart_obj.total += product_obj.selling_price
+                    cart_obj.save()
+                else:
+                    # new product added to cartproduct
+                    cartproduct = CartProduct.objects.create(cart=cart_obj,
+                                                             product=product_obj,
+                                                             rate=product_obj.selling_price,
+                                                             quantity=1,
+                                                             subtotal=product_obj.selling_price)
+                    cartproduct.save()
+                    cart_obj.total += product_obj.selling_price
+                    cart_obj.save()
+            # if cart doesnot exist
             else:
-                # new product added to cartproduct
+                cart_obj = Cart.objects.create(total=0)
+                # store obje in session
+                self.request.session['cart_id'] = cart_obj.id
+
+                # create a new product to add cartproduct
                 cartproduct = CartProduct.objects.create(cart=cart_obj,
                                                          product=product_obj,
                                                          rate=product_obj.selling_price,
@@ -104,22 +127,14 @@ class AddToCartView(EcomMixin, TemplateView):
                 cartproduct.save()
                 cart_obj.total += product_obj.selling_price
                 cart_obj.save()
-        # if cart doesnot exist
-        else:
-            cart_obj = Cart.objects.create(total=0)
-            # store obje in session
-            self.request.session['cart_id'] = cart_obj.id
 
-            # create a new product to add cartproduct
-            cartproduct = CartProduct.objects.create(cart=cart_obj,
-                                                     product=product_obj,
-                                                     rate=product_obj.selling_price,
-                                                     quantity=1,
-                                                     subtotal=product_obj.selling_price)
-            cartproduct.save()
-            cart_obj.total += product_obj.selling_price
-            cart_obj.save()
-        # check if product already exists in cart
+            # decrement product stock by 1
+            product_obj.stocks -= 1
+            product_obj.save()
+        else:
+            # return error telling Product OUT OF STOCK
+            return context
+
         return context
 
 
@@ -228,7 +243,8 @@ class MyCartView(EcomMixin, TemplateView):
 class ManageCartView(EcomMixin, View):
     def get(self, request, *args, **kwargs):
         cart_id = self.request.session.get('cart_id')
-        cp_id = self.kwargs["cp_id"]
+        cp_id = self.kwargs["cp_id"]  # this is product id
+        product = Product.objects.get(id=cp_id)
         action = request.GET['action']
         # get cart with provied cart_id
         cart = Cart.objects.get(id=cart_id)
@@ -237,13 +253,26 @@ class ManageCartView(EcomMixin, View):
         cart_obj = cp_obj.cart
 
         if action == "inc":
-            cp_obj.quantity += 1
-            cp_obj.subtotal += cp_obj.rate
-            cp_obj.save()
+            # if in stock increment else raise error
+            if product.stocks != 0:
+                print("????????????????", product.title, "-----", product.stocks)
+                cp_obj.quantity += 1
+                cp_obj.subtotal += cp_obj.rate
+                cp_obj.save()
 
-            cart_obj.total += cp_obj.rate
-            cart_obj.save()
+                # decrement product stocks remaining
+                product.stocks -= 1
+                product.save()
+
+                print("After?????????????", product.title, "-----", product.stocks)
+                # save cart
+                cart_obj.total += cp_obj.rate
+                cart_obj.save()
+            else:
+                messages.add_message(request, messages.ERROR, 'Not enough stock for requested product.')
+                return redirect(reverse_lazy("ecomapp:mycart"))
         elif action == "dec":
+
             cp_obj.quantity -= 1
             cp_obj.subtotal -= cp_obj.rate
             cp_obj.save()
@@ -251,11 +280,21 @@ class ManageCartView(EcomMixin, View):
             cart_obj.total -= cp_obj.rate
             cart_obj.save()
 
+            # increase product stock till 0
+            product.stocks += 1
+            product.save()
+
             if cp_obj.quantity == 0:
                 cp_obj.delete()
+
         elif action == "rmv":
             cart_obj.total -= cp_obj.subtotal
             cart_obj.save()
+
+            # set product stock as it
+            product.stocks += cp_obj.quantity
+            product.save()
+
             cp_obj.delete()
         else:
             pass
@@ -267,10 +306,16 @@ class EmptyCartView(View):
         cart_id = request.session.get("cart_id", None)
         if cart_id:
             cart = Cart.objects.get(id=cart_id)
+
+            # get all products in cart and set its product stock to previous value
+            cart_products = cart.cartproduct_set.all()
+            for cp in cart_products:
+                cp.product.stocks += cp.quantity
+                cp.product.save()
+
             cart.cartproduct_set.all().delete()
             cart.total = 0
             cart.save()
-
         else:
             pass
         return redirect("ecomapp:mycart")
@@ -376,6 +421,65 @@ class CustomerLoginView(FormView):
             return self.success_url
 
 
+class PasswordForgotView(FormView):
+    template_name = "forgotpassword.html"
+    form_class = PasswordForgotForm
+    success_url = "/forgot-password/?m=sent"
+
+    def form_valid(self, form):
+        # get email form recieved form data
+        email = form.cleaned_data.get("email")
+
+        # get user related with that email
+        customer = Customer.objects.get(user__email=email)
+        user = customer.user
+
+        # get current host ip/
+        url = self.request.META["HTTP_HOST"]
+
+        # send mail to the user with email
+        text_content = "Please Click the link below to reset your password"
+        html_content = url + "/password-reset/" + email + "/" + \
+                       password_reset_token.make_token(user) + "/"
+        send_mail(
+            "Password Reset Link | Django E-commerce",
+            text_content + "\n" + html_content,
+            settings.EMAIL_HOST_USER,
+            [email],
+            fail_silently=False,
+        )
+
+        return super().form_valid(form)
+
+
+class PasswordResetView(FormView):
+    template_name = "passwordreset.html"
+    success_url = reverse_lazy("ecomapp:customer-login")
+    form_class = PasswordResetForm
+
+    def dispatch(self, request, *args, **kwargs):
+        email = self.kwargs.get("email")
+        user = User.objects.get(email=email)
+        token = self.kwargs.get("token")
+        if user is not None and password_reset_token.check_token(user, token):
+            pass
+        else:
+            return redirect(reverse("ecomapp:forgot-password")+"?m=error")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        password = form.cleaned_data.get("new_password")
+
+        email = self.kwargs.get("email")
+        user = User.objects.get(email=email)
+
+        user.set_password(password)
+        user.save()
+
+        return super().form_valid(form)
+
+
+
 class CustomerProfileView(TemplateView):
     template_name = "customerprofile.html"
 
@@ -477,15 +581,17 @@ class AdminHomeView(AdminRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        users=User.objects.all()
+        users = User.objects.all()
         context['user_count'] = len(users)
         context['total_products'] = len(Product.objects.all())
         context['total_categories'] = len(Category.objects.all())
         context['total_orders'] = len(Order.objects.all())
         context["total_pending"] = len(Order.objects.filter(order_status="Order Recieved"))
         context["pendingorders"] = Order.objects.filter(order_status="Order Recieved").order_by("-id")
+        context["total_out_of_stocks"] = len(Product.objects.filter(stocks=0))
 
         return context
+
 
 class AdminPendingOrderView(AdminRequiredMixin, TemplateView):
     template_name = "admin/pendingorder.html"
@@ -495,6 +601,8 @@ class AdminPendingOrderView(AdminRequiredMixin, TemplateView):
         context["pendingorders"] = Order.objects.filter(order_status="Order Recieved").order_by("-id")
 
         return context
+
+
 class AdminOrderDetailView(AdminRequiredMixin, DetailView):
     template_name = "admin/orderdetail.html"
     model = Order
@@ -542,19 +650,16 @@ class AdminProfileView(AdminRequiredMixin, UpdateView):
     form_class = AdminProfileUpdateForm
     success_url = reverse_lazy("ecomapp:adminhome")
 
+
 class AdminListCategoryView(AdminRequiredMixin, ListView):
     template_name = "admin/listallcategory.html"
     queryset = Category.objects.all()
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        cat_list=context['category_list']
+        cat_list = context['category_list']
         return context
 
-class AdminDeleteCategoryView(AdminRequiredMixin, DeleteView):
-    model = Category
-    template_name = "admin/confirmdeletecategory.html"
-    success_url = reverse_lazy("ecomapp:adminhome")
 
 class AdminManageCategoryView(AdminRequiredMixin, View):
     def get(self, request, *args, **kwargs):
@@ -566,29 +671,11 @@ class AdminManageCategoryView(AdminRequiredMixin, View):
 
         if action == "edit":
             return redirect("ecomapp:admin-edit-category", slug=url_slug)
-            # cp_obj.quantity += 1
-            # cp_obj.subtotal += cp_obj.rate
-            # cp_obj.save()
-            #
-            # cart_obj.total += cp_obj.rate
-            # cart_obj.save()
-        elif action == "dec":
-            cp_obj.quantity -= 1
-            cp_obj.subtotal -= cp_obj.rate
-            cp_obj.save()
-
-            cart_obj.total -= cp_obj.rate
-            cart_obj.save()
-
-            if cp_obj.quantity == 0:
-                cp_obj.delete()
         elif action == "rmv":
-            cart_obj.total -= cp_obj.subtotal
-            cart_obj.save()
-            cp_obj.delete()
+            cat.delete()
         else:
             pass
-        return redirect("ecomapp:mycart")
+        return redirect("ecomapp:admin-list-category")
 
 
 class AdminEditCategoryView(AdminRequiredMixin, UpdateView):
@@ -596,4 +683,3 @@ class AdminEditCategoryView(AdminRequiredMixin, UpdateView):
     model = Category
     form_class = AdminCategoryUpdateForm
     success_url = reverse_lazy("ecomapp:admin-list-category")
-
