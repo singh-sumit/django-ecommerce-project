@@ -6,11 +6,15 @@ from django.views.generic import (TemplateView, View, CreateView, FormView, Deta
                                   UpdateView, DeleteView)
 from .models import Product, Category, Cart, CartProduct, Order, Admin, Customer, ORDER_STATUS
 from .forms import (CheckoutForm, CustomerRegistrationForm, CustomerLoginForm,
-                    AdminProfileUpdateForm, AdminCreateCategoryForm, AdminCreateProductForm, AdminCategoryUpdateForm)
+                    AdminProfileUpdateForm, AdminCreateCategoryForm, AdminCreateProductForm, AdminCategoryUpdateForm,
+                    PasswordForgotForm,PasswordResetForm, )
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.contrib import messages
+from .utils import password_reset_token
+from django.core.mail import send_mail
+from django.conf import settings
 
 
 # mixin
@@ -417,6 +421,65 @@ class CustomerLoginView(FormView):
             return self.success_url
 
 
+class PasswordForgotView(FormView):
+    template_name = "forgotpassword.html"
+    form_class = PasswordForgotForm
+    success_url = "/forgot-password/?m=sent"
+
+    def form_valid(self, form):
+        # get email form recieved form data
+        email = form.cleaned_data.get("email")
+
+        # get user related with that email
+        customer = Customer.objects.get(user__email=email)
+        user = customer.user
+
+        # get current host ip/
+        url = self.request.META["HTTP_HOST"]
+
+        # send mail to the user with email
+        text_content = "Please Click the link below to reset your password"
+        html_content = url + "/password-reset/" + email + "/" + \
+                       password_reset_token.make_token(user) + "/"
+        send_mail(
+            "Password Reset Link | Django E-commerce",
+            text_content + "\n" + html_content,
+            settings.EMAIL_HOST_USER,
+            [email],
+            fail_silently=False,
+        )
+
+        return super().form_valid(form)
+
+
+class PasswordResetView(FormView):
+    template_name = "passwordreset.html"
+    success_url = reverse_lazy("ecomapp:customer-login")
+    form_class = PasswordResetForm
+
+    def dispatch(self, request, *args, **kwargs):
+        email = self.kwargs.get("email")
+        user = User.objects.get(email=email)
+        token = self.kwargs.get("token")
+        if user is not None and password_reset_token.check_token(user, token):
+            pass
+        else:
+            return redirect(reverse("ecomapp:forgot-password")+"?m=error")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        password = form.cleaned_data.get("new_password")
+
+        email = self.kwargs.get("email")
+        user = User.objects.get(email=email)
+
+        user.set_password(password)
+        user.save()
+
+        return super().form_valid(form)
+
+
+
 class CustomerProfileView(TemplateView):
     template_name = "customerprofile.html"
 
@@ -525,7 +588,7 @@ class AdminHomeView(AdminRequiredMixin, TemplateView):
         context['total_orders'] = len(Order.objects.all())
         context["total_pending"] = len(Order.objects.filter(order_status="Order Recieved"))
         context["pendingorders"] = Order.objects.filter(order_status="Order Recieved").order_by("-id")
-        context["total_out_of_stocks"]  = len(Product.objects.filter(stocks=0))
+        context["total_out_of_stocks"] = len(Product.objects.filter(stocks=0))
 
         return context
 

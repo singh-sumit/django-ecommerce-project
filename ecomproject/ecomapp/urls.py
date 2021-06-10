@@ -7,8 +7,8 @@ from .views import (HomeView, AboutView, ContactView, AllProductsView,
                     AdminHomeView, AdminOrderDetailView,AdminOrderListView,
                     AdminChangeOrderStatusView,SearchView, AdminCreateCategoryView,
                     AdminCreateProductView,AdminProfileView, AdminPendingOrderView,
-                    AdminListCategoryView,AdminManageCategoryView,AdminEditCategoryView,
-                    )
+                    AdminListCategoryView,AdminManageCategoryView,AdminEditCategoryView,PasswordForgotView,
+                    PasswordResetView,)
 
 app_name = "ecomapp"
 
@@ -31,6 +31,10 @@ urlpatterns = [
     path('register/', CustomerRegistrationView.as_view(), name="customer-register"),
     path('logout/', CustomerLogoutView.as_view(), name="customer-logout"),
     path('login/', CustomerLoginView.as_view(), name="customer-login"),
+
+    # user id reset
+    path('forgot-password/', PasswordForgotView.as_view(), name="forgot-password"),
+    path('password-reset/<email>/<token>/', PasswordResetView.as_view(), name="password-reset"),
 
     path('profile/', CustomerProfileView.as_view(), name="customer-profile"),
     path('profile/order-<int:pk>/', CustomerOrderDetailView.as_view(), name="customer-order-detail"),
