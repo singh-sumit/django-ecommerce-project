@@ -22,11 +22,21 @@
                 {% for order in allorders %}
                 <tr>
                     <td>{{forloop.counter}}</td>
-                     <td><a href="{% url 'ecomapp:admin-order-detail' order.id %}">#ORDER_{{ order.id }}</a></td>
+                    <td><a href="{% url 'ecomapp:admin-order-detail' order.id %}">#ORDER_{{ order.id }}</a></td>
                     <td>{{ order.ordered_by }}</td>
                     <td>{{ order.created_at|timesince }}</td>
                     <td>{{ order.total }}</td>
-                    <td>{{ order.order_status }}</td>
+                    {% if order.order_status == "Order Recieved" %}
+                    <td><span class="badge badge-secondary">{{ order.order_status }}</span></td>
+                    {% elif order.order_status == "Order Processing" %}
+                    <td><span class="badge badge-primary">{{ order.order_status }}</span></td>
+                    {% elif order.order_status == "Order Canceled" %}
+                    <td><span class="badge badge-danger">{{ order.order_status }}</span></td>
+                    {% elif order.order_status == "Order Completed" %}
+                    <td><span class="badge badge-success">{{ order.order_status }}</span></td>
+                    {% else %}
+                    <td><span class="badge badge-warning">{{ order.order_status }}</span></td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
                 </tbody>
