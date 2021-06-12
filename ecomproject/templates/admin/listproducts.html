@@ -1,0 +1,83 @@
+{% extends "admin/adminbase.html" %}
+
+{% block title %}List Products | Admin{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h3>All Products :</h3>
+            {% for message in messages %}
+            <div class="alert {{ message.tags }} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                {{ message }}
+            </div>
+            {% endfor %}
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>SN</th>
+                    <th>Title</th>
+                    <th>Product_ID</th>
+                    <th>Stocks</th>
+                    <th>Category</th>
+                    <th>Marked Price</th>
+                    <th>Selling Price</th>
+                    <th colspan="2">Action</th>
+                </tr>
+
+                </thead>
+                <tbody>
+                {% for prod in product_list %}
+                {% if prod.stocks == 0 %}
+                <tr class="text-danger font-weight-bold">
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ prod.title }}</td>
+                    <td><a href="{% url 'ecomapp:productdetail' prod.slug %} ">#PRODUCT_{{ prod.id }}</a></td>
+                    <td>{{ prod.stocks }}</td>
+                    <td>{{ prod.category.title }}</td>
+                    <td class="">{{ prod.marked_price }}</td>
+                    <td class="">{{ prod.selling_price }}</td>
+
+                    <td>
+                        <a href="{% url 'ecomapp:admin-manage-product' prod.slug %}?action=edit">
+                            <i class="fa fa-edit green fa-2x"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{% url 'ecomapp:admin-manage-product' prod.slug %}?action=rmv">
+                            <i class="fa fa-trash red fa-2x"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ prod.title }}</td>
+                    <td><a href="{% url 'ecomapp:productdetail' prod.slug %} ">#PRODUCT_{{ prod.id }}</a></td>
+                    <td>{{ prod.stocks }}</td>
+                    <td>{{ prod.category.title }}</td>
+                    <td class="">{{ prod.marked_price }}</td>
+                    <td class="">{{ prod.selling_price }}</td>
+                    <td>
+                        <a href="{% url 'ecomapp:admin-manage-product' prod.slug %}?action=edit" ?>
+                            <i class="fa fa-edit green fa-2x"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="{% url 'ecomapp:admin-manage-product' prod.slug %}?action=rmv">
+                            <i class="fa fa-trash red fa-2x"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}

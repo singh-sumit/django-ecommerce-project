@@ -102,6 +102,8 @@ class AdminCreateProductForm(forms.ModelForm):
         fields = "__all__"
 
 
+
+
 class AdminProfileUpdateForm(forms.ModelForm):
     class Meta:
         model = Admin
@@ -111,4 +113,10 @@ class AdminProfileUpdateForm(forms.ModelForm):
 class AdminCategoryUpdateForm(forms.ModelForm):
     class Meta:
         model = Category
+        fields = "__all__"
+
+
+class AdminUpdateProductForm(forms.ModelForm):
+    class Meta:
+        model = Product
         fields = "__all__"

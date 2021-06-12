@@ -2,13 +2,13 @@ from django.urls import path
 from .views import (HomeView, AboutView, ContactView, AllProductsView,
                     list_product_by_category, ProductDetail, AddToCartView,
                     MyCartView, ManageCartView, EmptyCartView, CheckoutView,
-                    CustomerRegistrationView,CustomerLogoutView,CustomerLoginView,
-                    CustomerProfileView,CustomerOrderDetailView, AdminLoginView,
-                    AdminHomeView, AdminOrderDetailView,AdminOrderListView,
-                    AdminChangeOrderStatusView,SearchView, AdminCreateCategoryView,
-                    AdminCreateProductView,AdminProfileView, AdminPendingOrderView,
-                    AdminListCategoryView,AdminManageCategoryView,AdminEditCategoryView,PasswordForgotView,
-                    PasswordResetView,)
+                    CustomerRegistrationView, CustomerLogoutView, CustomerLoginView,
+                    CustomerProfileView, CustomerOrderDetailView, AdminLoginView,
+                    AdminHomeView, AdminOrderDetailView, AdminOrderListView,
+                    AdminChangeOrderStatusView, SearchView, AdminCreateCategoryView,
+                    AdminCreateProductView, AdminProfileView, AdminPendingOrderView,
+                    AdminListCategoryView, AdminManageCategoryView, AdminEditCategoryView, PasswordForgotView,
+                    PasswordResetView, AdminListProductView, AdminManageProductView, AdminUpdateProductView)
 
 app_name = "ecomapp"
 
@@ -57,8 +57,8 @@ urlpatterns = [
     path('admin-edit-category/<slug:slug>/', AdminEditCategoryView.as_view(), name="admin-edit-category"),
 
     path('admin-manage-category-<slug:slug>/', AdminManageCategoryView.as_view(), name="admin-manage-category"),
-
-
-
+    path('admin-list-products/', AdminListProductView.as_view(), name="admin-list-products"),
+    path('admin-edit-product/<slug:slug>/', AdminUpdateProductView.as_view(), name="admin-edit-product"),
+    path('manage-product/<slug:slug>/', AdminManageProductView.as_view(), name="admin-manage-product"),
 
 ]

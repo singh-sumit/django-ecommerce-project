@@ -1,13 +1,14 @@
 from django.contrib.auth import login, logout, authenticate
 from django.core.exceptions import ValidationError
 from django.shortcuts import render, get_object_or_404, reverse, redirect
+from django.template import RequestContext
 from django.urls import reverse_lazy
 from django.views.generic import (TemplateView, View, CreateView, FormView, DetailView, ListView,
                                   UpdateView, DeleteView)
 from .models import Product, Category, Cart, CartProduct, Order, Admin, Customer, ORDER_STATUS
 from .forms import (CheckoutForm, CustomerRegistrationForm, CustomerLoginForm,
                     AdminProfileUpdateForm, AdminCreateCategoryForm, AdminCreateProductForm, AdminCategoryUpdateForm,
-                    PasswordForgotForm,PasswordResetForm, )
+                    PasswordForgotForm, PasswordResetForm, AdminUpdateProductForm, )
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -39,6 +40,15 @@ class HomeView(EcomMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['category_list'] = Category.objects.all()
         context['product_list'] = Product.objects.all().order_by("-id")
+
+        # add a context for product count in cart
+        cart_id = self.request.session.get("cart_id", None)
+        if cart_id:
+            context['cart'] = Cart.objects.get(id=cart_id)
+        else:
+            context['cart'] = None
+
+        print('Cart :', context['cart'], "?????????????????")
         return context
 
 
@@ -57,6 +67,14 @@ def list_product_by_category(request, cat_id):
     context = {'product_list': specific_products,
                'category_list': Category.objects.all(),
                }
+
+    # add a context for product count in cart
+    cart_id = request.session.get("cart_id", None)
+    if cart_id:
+        context['cart'] = Cart.objects.get(id=cart_id)
+    else:
+        context['cart'] = None
+
     return render(request, 'home.html', context)
 
 
@@ -70,13 +88,21 @@ class ProductDetail(EcomMixin, TemplateView):
         product.view_count += 1
         product.save()
         context['product'] = product
+
+        # add a context for product count in cart
+        cart_id = self.request.session.get("cart_id", None)
+        if cart_id:
+            context['cart'] = Cart.objects.get(id=cart_id)
+        else:
+            context['cart'] = None
+
         return context
 
 
 class AddToCartView(EcomMixin, TemplateView):
     template_name = "addtocart.html"
 
-    def get_context_data(self, **kwargs):
+    def get(self, request, *args, **kwargs):
         context = super().get_context_data(**kwargs)
         # get product from requested url using pro_id
         product_id = self.kwargs['pro_id']
@@ -135,7 +161,9 @@ class AddToCartView(EcomMixin, TemplateView):
             # return error telling Product OUT OF STOCK
             return context
 
-        return context
+        messages.add_message(self.request, messages.SUCCESS, "Product added to cart.")
+
+        return redirect("ecomapp:home")
 
 
 class MyCartView(EcomMixin, TemplateView):
@@ -389,6 +417,18 @@ class CustomerRegistrationView(CreateView):
         else:
             return self.success_url
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # add a context for product count in cart
+        cart_id = self.request.session.get("cart_id", None)
+        if cart_id:
+            context['cart'] = Cart.objects.get(id=cart_id)
+        else:
+            context['cart'] = None
+
+        return context
+
 
 class CustomerLogoutView(View):
     def get(self, request, *args, **kwargs):
@@ -419,6 +459,18 @@ class CustomerLoginView(FormView):
             return next_url
         else:
             return self.success_url
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # add a context for product count in cart
+        cart_id = self.request.session.get("cart_id", None)
+        if cart_id:
+            context['cart'] = Cart.objects.get(id=cart_id)
+        else:
+            context['cart'] = None
+
+        return context
 
 
 class PasswordForgotView(FormView):
@@ -464,7 +516,7 @@ class PasswordResetView(FormView):
         if user is not None and password_reset_token.check_token(user, token):
             pass
         else:
-            return redirect(reverse("ecomapp:forgot-password")+"?m=error")
+            return redirect(reverse("ecomapp:forgot-password") + "?m=error")
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -477,7 +529,6 @@ class PasswordResetView(FormView):
         user.save()
 
         return super().form_valid(form)
-
 
 
 class CustomerProfileView(TemplateView):
@@ -500,6 +551,14 @@ class CustomerProfileView(TemplateView):
 
         orders = Order.objects.filter(cart__customer=customer).order_by("-id")
         context['orders'] = orders
+
+        # add a context for product count in cart
+        cart_id = self.request.session.get("cart_id", None)
+        if cart_id:
+            context['cart'] = Cart.objects.get(id=cart_id)
+        else:
+            context['cart'] = None
+
         return context
 
 
@@ -524,6 +583,18 @@ class CustomerOrderDetailView(DetailView):
             return redirect("/login/?next=/profile/")
         return super().dispatch(request, *args, **kwargs)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # add a context for product count in cart
+        cart_id = self.request.session.get("cart_id", None)
+        if cart_id:
+            context['cart'] = Cart.objects.get(id=cart_id)
+        else:
+            context['cart'] = None
+
+        return context
+
 
 class SearchView(TemplateView):
     template_name = "search.html"
@@ -535,11 +606,31 @@ class SearchView(TemplateView):
             Q(title__icontains=kw) |
             Q(description__icontains=kw))
         context['results'] = results
+
+        # add a context for product count in cart
+        cart_id = self.request.session.get("cart_id", None)
+        if cart_id:
+            context['cart'] = Cart.objects.get(id=cart_id)
+        else:
+            context['cart'] = None
+
         return context
 
 
 class AboutView(EcomMixin, TemplateView):
     template_name = "about.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # add a context for product count in cart
+        cart_id = self.request.session.get("cart_id", None)
+        if cart_id:
+            context['cart'] = Cart.objects.get(id=cart_id)
+        else:
+            context['cart'] = None
+
+        return context
 
 
 class ContactView(EcomMixin, TemplateView):
@@ -641,7 +732,11 @@ class AdminCreateCategoryView(AdminRequiredMixin, CreateView):
 class AdminCreateProductView(AdminRequiredMixin, CreateView):
     template_name = "admin/createproduct.html"
     form_class = AdminCreateProductForm
-    success_url = reverse_lazy("ecomapp:adminhome")
+    success_url = reverse_lazy("ecomapp:admin-create-product")
+
+    def form_valid(self, form):
+        messages.add_message(self.request, messages.SUCCESS, "Product Added Successfully.")
+        return super().form_valid(form)
 
 
 class AdminProfileView(AdminRequiredMixin, UpdateView):
@@ -683,3 +778,35 @@ class AdminEditCategoryView(AdminRequiredMixin, UpdateView):
     model = Category
     form_class = AdminCategoryUpdateForm
     success_url = reverse_lazy("ecomapp:admin-list-category")
+
+
+class AdminListProductView(AdminRequiredMixin, ListView):
+    template_name = "admin/listproducts.html"
+    model = Product
+
+
+class AdminManageProductView(AdminRequiredMixin, TemplateView):
+    # template_name = "admin/editproduct.html"
+
+    def get(self, request, *args, **kwargs):
+        action = self.request.GET["action"]
+        url_slug = self.kwargs['slug']
+        print(action, "??????????????????????")
+        prod = Product.objects.get(slug=url_slug)
+        if prod and action == "edit":
+            return redirect("ecomapp:admin-edit-product", slug=url_slug)
+        elif prod and action == "rmv":
+            prod.delete()
+            messages.add_message(request, messages.ERROR, "Product Deleted successfully")
+            return redirect("ecomapp:admin-list-products", )
+        else:
+            return render(request, "404.html", context={'sender': 'admin'})
+
+
+class AdminUpdateProductView(AdminRequiredMixin, UpdateView):
+    template_name = "admin/productupdate.html"
+    model = Product
+    form_class = AdminUpdateProductForm
+    success_url = reverse_lazy("ecomapp:adminhome")
+
+

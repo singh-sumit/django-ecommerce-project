@@ -10,6 +10,13 @@
         .brandcolor{
             color: "red";
         }
+        .cart-badge{
+            font-size : 14px;
+            position: relative;
+            bottom: 20px;
+            right: 5px;
+            opacity: 0.8;
+        }
         {% block style %}
         {% endblock style%}
     </style>
@@ -55,8 +62,17 @@
             </li>
             {% endif %}
             <li class="nav-item">
-                <a class="nav-link" href="{% url 'ecomapp:mycart' %}"><i class="fa fa-cart-plus"
-                                                                         style="color: primary; font-size: 2em;"></i></a>
+                {% if cart %}
+                <a class="nav-link" href="{% url 'ecomapp:mycart' %}">
+                    <i class="fa fa-cart-plus fa-2x">
+                        <span class="badge badge-primary cart-badge">{{ cart.cartproduct_set.count }}</span>
+                    </i>
+                </a>
+                {% else %}
+                <a class="nav-link" href="{% url 'ecomapp:mycart' %}">
+                    <i class="fa fa-cart-plus fa-2x"><span class="badge badge-primary cart-badge">0</span></i>
+                </a>
+                {% endif %}
             </li>
         </ul>
         <form method="GET" action="{% url 'ecomapp:search' %}" class="form-inline my-2 my-lg-0">
@@ -72,7 +88,11 @@
     {% endblock content %}
 </main>
 
-
+<footer>
+    <p>
+    {{ request.user.customer. }}
+    </p>
+</footer>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
         crossorigin="anonymous"></script>
