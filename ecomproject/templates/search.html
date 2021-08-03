@@ -42,6 +42,7 @@
             {% else %}
                 <h3>No Results for <span class="text-info">"{{ request.GET.keyword }}"</span> ......</h3>
                 <hr>
+                {% include '404.html'%}
             {% endif %}
         </div>
     </div>
