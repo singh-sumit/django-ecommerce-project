@@ -1,5 +1,4 @@
 # django-ecommerce-project
-7th sem project
 
 # Created a simple e-commerce project using
 ![image](https://img.shields.io/badge/3.2-Django-brightgreen)
